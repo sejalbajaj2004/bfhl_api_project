@@ -9,8 +9,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const OFFICIAL_EMAIL = process.env.OFFICIAL_EMAIL;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
+// Helper Functions
 function generateFibonacci(n) {
   if (n <= 0) return [];
   if (n === 1) return [0];
@@ -53,20 +54,30 @@ function calculateLCM(arr) {
   return arr.reduce((acc, num) => lcm(acc, num));
 }
 
-// AI Function using Gemini
 async function getAIResponse(question) {
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    
-    const response = await axios.post(url, {
-      contents: [{
-        parts: [{
-          text: `Answer this question in exactly ONE WORD only. No punctuation, no explanation, just one word: ${question}`
-        }]
-      }]
-    });
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'user',
+            content: `Answer this question in exactly ONE WORD only. No punctuation, no explanation, just one word: ${question}`
+          }
+        ],
+        max_tokens: 10,
+        temperature: 0.1
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    const answer = response.data.candidates[0].content.parts[0].text.trim();
+    const answer = response.data.choices[0].message.content.trim();
     return answer.split(/\s+/)[0].replace(/[^\w]/g, '');
     
   } catch (error) {
