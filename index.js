@@ -53,22 +53,24 @@ function calculateLCM(arr) {
   return arr.reduce((acc, num) => lcm(acc, num));
 }
 
+// AI Function using Gemini
 async function getAIResponse(question) {
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     
     const response = await axios.post(url, {
       contents: [{
         parts: [{
-          text: `Answer this question in exactly ONE WORD only, no punctuation, no explanation: ${question}`
+          text: `Answer this question in exactly ONE WORD only. No punctuation, no explanation, just one word: ${question}`
         }]
       }]
     });
 
     const answer = response.data.candidates[0].content.parts[0].text.trim();
     return answer.split(/\s+/)[0].replace(/[^\w]/g, '');
+    
   } catch (error) {
-    console.error('AI Error:', error.message);
+    console.error('AI Error:', error.response?.data || error.message);
     throw new Error('AI service unavailable');
   }
 }
@@ -83,6 +85,7 @@ app.get('/health', (req, res) => {
 app.post('/bfhl', async (req, res) => {
   try {
     const body = req.body;
+
     const keys = Object.keys(body);
     if (keys.length !== 1) {
       return res.status(400).json({
